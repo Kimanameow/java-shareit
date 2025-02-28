@@ -1,54 +1,62 @@
 package ru.practicum.shareit.user.storage;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.exception.EmailException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.mapper.UserMapperInterface;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.mapper.UserMapper;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new HashMap<>();
-    UserMapperInterface userMapper;
-
-    @Autowired
-    public InMemoryUserStorage(UserMapperInterface userMapper) {
-        this.userMapper = userMapper;
-    }
+    long id = 0;
 
     @Override
-    public List<User> allUser() {
+    public List<UserDto> allUser() {
         if (users.isEmpty()) {
             throw new NotFoundException("Not found");
         }
-        return users.values().stream().toList();
+        return users.values().stream()
+                .map(UserMapper::toUserDto)
+                .toList();
     }
 
     @Override
-    public User addNewUser(User user) {
+    public UserDto addNewUser(User user) {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        Validator validator = factory.getValidator();
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        if (!violations.isEmpty()) {
+            throw new ValidateException("Validate exception");
+        }
         findRepeatingEmail(user.getEmail());
-        User newUser = userMapper.newUser(user);
-        users.put(newUser.getId(), newUser);
-        return newUser;
+        setId(user);
+        users.put(user.getId(), user);
+        return UserMapper.toUserDto(user);
     }
 
     @Override
-    public void deleteUserById(long id) {
-        checkUserById(id);
-        users.remove(id);
+    public void deleteUserById(long userId) {
+        checkUserById(userId);
+        users.remove(userId);
     }
 
 
     @Override
-    public User changeUserById(User newUser, long id) {
-        checkUserById(id);
-        User oldUser = users.get(id);
+    public UserDto changeUserById(User newUser, long userId) {
+        checkUserById(userId);
+        User oldUser = users.get(userId);
         if (newUser.getName() != null) {
             if (!newUser.getName().isEmpty() && !newUser.getName().isBlank()) {
                 oldUser.setName(newUser.getName());
@@ -64,18 +72,18 @@ public class InMemoryUserStorage implements UserStorage {
                 }
             }
         }
-        return oldUser;
+        return UserMapper.toUserDto(oldUser);
     }
 
     @Override
-    public User getUserById(long id) {
-        checkUserById(id);
-        return users.get(id);
+    public UserDto getUserById(long userId) {
+        checkUserById(userId);
+        return UserMapper.toUserDto(users.get(userId));
     }
 
-    private void checkUserById(long id) {
-        if (users.isEmpty() || !users.containsKey(id)) {
-            throw new NotFoundException("Not found ID " + id);
+    private void checkUserById(long userId) {
+        if (users.isEmpty() || !users.containsKey(userId)) {
+            throw new NotFoundException("Not found ID " + userId);
         }
     }
 
@@ -85,5 +93,10 @@ public class InMemoryUserStorage implements UserStorage {
                 throw new EmailException("Email is already in use");
             }
         }
+    }
+
+    private void setId(User user) {
+        id++;
+        user.setId(id);
     }
 }

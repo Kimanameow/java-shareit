@@ -1,8 +1,7 @@
 package ru.practicum.shareit.item.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.ItemStorage;
@@ -11,25 +10,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ItemService {
-    ItemStorage itemStorage;
 
-    @Autowired
-    public ItemService(ItemStorage itemStorage) {
-        this.itemStorage = itemStorage;
-    }
+    private final ItemStorage itemStorage;
 
-    public Item addNewItem(Item item, long userId) {
-        validateNewItem(item);
+    public ItemDto addNewItem(Item item, long userId) {
         return itemStorage.addNewItem(item, userId);
     }
 
-    public Item getItemById(long id) {
-        return itemStorage.getItemById(id);
+    public ItemDto getItemById(long itemId) {
+        return itemStorage.getItemById(itemId);
     }
 
-    public Item changeItem(Item item, long id, long itemId) {
-        return itemStorage.changeItem(item, id, itemId);
+    public ItemDto changeItem(Item item, long userId, long itemId) {
+        return itemStorage.changeItem(item, userId, itemId);
     }
 
     public List<ItemDto> getItemsByOwner(long userId) {
@@ -41,18 +36,5 @@ public class ItemService {
             return new ArrayList<>();
         }
         return itemStorage.findItemsByDescription(description);
-    }
-
-    private void validateNewItem(Item item) {
-        if (item.getName() == null || item.getName().isEmpty() || item.getName().isBlank()) {
-            throw new ValidateException("Unexpected name");
-        }
-        if (item.getDescription() == null ||
-                item.getDescription().isEmpty() || item.getDescription().isBlank()) {
-            throw new ValidateException("Unexpected description");
-        }
-        if (item.getAvailable() == null) {
-            throw new ValidateException("Change available");
-        }
     }
 }

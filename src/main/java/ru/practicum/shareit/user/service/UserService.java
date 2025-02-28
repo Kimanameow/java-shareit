@@ -1,28 +1,25 @@
 package ru.practicum.shareit.user.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
-    UserStorage userStorage;
 
-    @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
+    private final UserStorage userStorage;
 
-    public List<User> allUser() {
+    public List<UserDto> allUser() {
         return userStorage.allUser();
     }
 
-    public User addNewUser(User user) {
-        validateUser(user);
+    public UserDto addNewUser(User user) {
         return userStorage.addNewUser(user);
     }
 
@@ -30,23 +27,11 @@ public class UserService {
         userStorage.deleteUserById(id);
     }
 
-    public User changeUserById(User user, long id) {
+    public UserDto changeUserById(User user, long id) {
         return userStorage.changeUserById(user, id);
     }
 
-    public User getUserById(long id) {
+    public UserDto getUserById(long id) {
         return userStorage.getUserById(id);
-    }
-
-    private void validateUser(User user) {
-        if (user == null) {
-            throw new ValidateException("Unexpected");
-        }
-        if (user.getName() == null || user.getName().isBlank()) {
-            throw new ValidateException("Unexpected name");
-        }
-        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            throw new ValidateException("Unexpected Email.");
-        }
     }
 }

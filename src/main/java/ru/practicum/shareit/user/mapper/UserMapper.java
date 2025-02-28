@@ -1,31 +1,24 @@
 package ru.practicum.shareit.user.mapper;
 
-import org.springframework.stereotype.Component;
+
 import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.dto.UserDto;
 
-@Component
-public class UserMapper implements UserMapperInterface {
+public class UserMapper {
 
-    private long id = 0;
-
-    @Override
-    public UserDto toUserDto(User user) {
+    public static UserDto toUserDto(User user) {
         if (user == null) {
-            throw new ValidateException("Unexpected");
+            throw new ValidateException("Void request.");
         }
-        UserDto userDto = new UserDto();
-        userDto.setName(user.getName());
-        return userDto;
+        return UserDto.builder().id(user.getId()).email(user.getEmail()).name(user.getName()).build();
     }
 
-    @Override
-    public User newUser(User user) {
-        if (user == null) {
-            throw new ValidateException("Unexpected");
+    public static User toUser(UserDto userDto) {
+        if (userDto == null) {
+            throw new ValidateException("Void request.");
         }
-        id++;
-        return User.builder().name(user.getName()).email(user.getEmail()).id(id).build();
+        return User.builder().id(userDto.getId()).email(userDto.getEmail())
+                .name(userDto.getName()).build();
     }
 }

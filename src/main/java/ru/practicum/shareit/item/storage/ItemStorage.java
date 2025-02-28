@@ -6,11 +6,11 @@ import ru.practicum.shareit.item.model.Item;
 import java.util.List;
 
 public interface ItemStorage {
-    public Item addNewItem(Item item, long userId);
+    public ItemDto addNewItem(Item item, long userId);
 
-    public Item getItemById(long id);
+    public ItemDto getItemById(long itemId);
 
-    public Item changeItem(Item item, long id, long itemId);
+    public ItemDto changeItem(Item item, long userId, long itemId);
 
     public List<ItemDto> getItemsByOwner(long userId);
 
