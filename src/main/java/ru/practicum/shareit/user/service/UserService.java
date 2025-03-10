@@ -2,7 +2,6 @@ package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.storage.UserStorage;
 
@@ -18,7 +17,7 @@ public class UserService {
         return userStorage.allUser();
     }
 
-    public UserDto addNewUser(User user) {
+    public UserDto addNewUser(UserDto user) {
         return userStorage.addNewUser(user);
     }
 
@@ -26,7 +25,7 @@ public class UserService {
         userStorage.deleteUserById(id);
     }
 
-    public UserDto changeUserById(User user, long id) {
+    public UserDto changeUserById(UserDto user, long id) {
         return userStorage.changeUserById(user, id);
     }
 

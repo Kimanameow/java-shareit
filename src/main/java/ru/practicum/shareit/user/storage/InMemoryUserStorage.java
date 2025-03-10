@@ -1,9 +1,5 @@
 package ru.practicum.shareit.user.storage;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
-import jakarta.validation.Validator;
-import jakarta.validation.ValidatorFactory;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.exception.EmailException;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -15,12 +11,11 @@ import ru.practicum.shareit.user.mapper.UserMapper;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Component
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new HashMap<>();
-    long id = 0;
+    private long id = 0;
 
     @Override
     public List<UserDto> allUser() {
@@ -33,14 +28,9 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public UserDto addNewUser(User user) {
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        Validator validator = factory.getValidator();
-        Set<ConstraintViolation<User>> violations = validator.validate(user);
-        if (!violations.isEmpty()) {
-            throw new ValidateException("Validate exception");
-        }
-        findRepeatingEmail(user.getEmail());
+    public UserDto addNewUser(UserDto userDto) {
+        findRepeatingEmail(userDto.getEmail());
+        User user = UserMapper.toUser(userDto);
         setId(user);
         users.put(user.getId(), user);
         return UserMapper.toUserDto(user);
@@ -54,7 +44,7 @@ public class InMemoryUserStorage implements UserStorage {
 
 
     @Override
-    public UserDto changeUserById(User newUser, long userId) {
+    public UserDto changeUserById(UserDto newUser, long userId) {
         checkUserById(userId);
         User oldUser = users.get(userId);
         if (newUser.getName() != null) {
@@ -71,6 +61,7 @@ public class InMemoryUserStorage implements UserStorage {
                     oldUser.setEmail(newUser.getEmail());
                 }
             }
+            users.put(oldUser.getId(), oldUser);
         }
         return UserMapper.toUserDto(oldUser);
     }
@@ -96,7 +87,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     private void setId(User user) {
-        id++;
         user.setId(id);
+        id++;
     }
 }
