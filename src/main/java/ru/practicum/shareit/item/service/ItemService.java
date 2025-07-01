@@ -1,44 +1,22 @@
 package ru.practicum.shareit.item.service;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.ItemBookingCommentDto;
+import ru.practicum.shareit.item.dto.ItemCommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.storage.ItemStorage;
-import ru.practicum.shareit.user.User;
-import ru.practicum.shareit.user.mapper.UserMapper;
-import ru.practicum.shareit.user.storage.UserStorage;
 
-import java.util.ArrayList;
 import java.util.List;
 
-@Service
-@RequiredArgsConstructor
-public class ItemService {
+public interface ItemService {
+    public ItemDto addNewItem(ItemDto itemDto, Long userId);
 
-    private final ItemStorage itemStorage;
-    private final UserStorage userStorage;
+    public ItemCommentDto getItemById(Long itemId);
 
-    public ItemDto addNewItem(ItemDto item, long userId) {
-        User user = UserMapper.toUser(userStorage.getUserById(userId));
-        return itemStorage.addNewItem(item, user);
-    }
+    public ItemDto changeItem(ItemDto itemDto, Long userId, Long itemId);
 
-    public ItemDto getItemById(long itemId) {
-        return itemStorage.getItemById(itemId);
-    }
+    public List<ItemBookingCommentDto> getItemsByOwner(Long userId);
 
-    public ItemDto changeItem(ItemDto item, long userId, long itemId) {
-        return itemStorage.changeItem(item, userId, itemId);
-    }
+    public List<ItemDto> findItemsByDescription(String description);
 
-    public List<ItemDto> getItemsByOwner(long userId) {
-        return itemStorage.getItemsByOwner(userId);
-    }
-
-    public List<ItemDto> findItemsByDescription(String description) {
-        if (description.isBlank()) {
-            return new ArrayList<>();
-        }
-        return itemStorage.findItemsByDescription(description);
-    }
+    CommentDto addComment(Long itemId, CommentDto commentDto);
 }
