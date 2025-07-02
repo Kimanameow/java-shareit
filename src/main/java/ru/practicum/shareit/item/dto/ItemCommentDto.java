@@ -5,6 +5,7 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.user.User;
 
 import java.util.List;
+
 @Data
 public class ItemCommentDto {
     private String name;

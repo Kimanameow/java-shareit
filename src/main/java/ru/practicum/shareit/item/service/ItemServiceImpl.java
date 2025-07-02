@@ -18,7 +18,6 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -87,22 +86,22 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemBookingCommentDto> getItemsByOwner(Long userId) {
-        List<ItemBookingCommentDto> returnedList= new ArrayList<>();
+        List<ItemBookingCommentDto> returnedList = new ArrayList<>();
 
         List<Item> itemsForUserWithComm = itemRepository.findItemsForUserWithComm(userId);
-        if(itemsForUserWithComm.isEmpty()){
+        if (itemsForUserWithComm.isEmpty()) {
             throw new NotFoundException("Can't find your items");
         }
 
         List<Long> itemsIds = new ArrayList<>();
-        for(Item item : itemsForUserWithComm){
+        for (Item item : itemsForUserWithComm) {
             itemsIds.add(item.getId());
         }
 
         List<Booking> bookingsForItems = bookingRepository.findAllByItemIdIn(itemsIds);
-        for(Item item : itemsForUserWithComm){
+        for (Item item : itemsForUserWithComm) {
             List<Booking> bookingsForThisItem = bookingsForItems.stream()
-                    .filter(booking->booking.getItem().equals(item)).toList();
+                    .filter(booking -> booking.getItem().equals(item)).toList();
 
             ItemBookingCommentDto itemBookingCommentDto = itemMapper.toItemBookingDto(item);
 
