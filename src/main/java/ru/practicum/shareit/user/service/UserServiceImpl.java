@@ -41,8 +41,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto changeUserById(UserDto newUserDto, Long id) {
-        User oldUser = userRepository.findById(id).
-                orElseThrow(() -> new NotFoundException("User not found"));
+        User oldUser = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("User not found"));
         if (newUserDto.getName() != null && !newUserDto.getName().isBlank()) {
             oldUser.setName(newUserDto.getName());
         }
