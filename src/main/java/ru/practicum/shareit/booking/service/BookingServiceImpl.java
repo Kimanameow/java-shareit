@@ -35,7 +35,7 @@ public class BookingServiceImpl implements BookingService {
         booking.setStart(bookingRequest.getStart());
         booking.setEnd(bookingRequest.getEnd());
         booking.setItem(itemRepository.findById(bookingRequest.getItemId())
-                .orElseThrow(()-> new NotFoundException("Can't find this item.")));
+                .orElseThrow(() -> new NotFoundException("Can't find this item.")));
         booking.setBooker(userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Can't find this user")));
         booking.setStatus(Status.WAITING);
@@ -103,7 +103,7 @@ public class BookingServiceImpl implements BookingService {
         if (booking.getStart().isAfter(booking.getEnd()) || booking.getStart().isEqual(booking.getEnd())) {
             throw new ValidateException("Can't add booking with that time");
         }
-        if(booking.getItem().getAvailable().equals(false)){
+        if (booking.getItem().getAvailable().equals(false)) {
             throw new ValidateException("Unavailable item");
         }
     }

@@ -10,5 +10,6 @@ public interface CommentMapper {
     Comment toComment(CommentDto commentDto);
 
     CommentDto toCommentDto(Comment comment);
+
     CommentResponseDto toCommentResponseDto(Comment comment);
 }
