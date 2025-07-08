@@ -8,6 +8,7 @@ import java.util.List;
 
 @Data
 public class ItemCommentDto {
+    private long id;
     private String name;
     private String description;
     private Boolean available;

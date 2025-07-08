@@ -11,7 +11,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     List<Item> findAllByOwnerId(long userId);
 
-    List<Item> findAllByDescriptionContaining(String description);
+    List<Item> findAllByDescriptionContainingIgnoreCase(String description);
 
     @Query("SELECT i FROM Item i LEFT JOIN FETCH i.comments WHERE i.id = :id")
     Item findItemWithComments(@Param("id") Long id);

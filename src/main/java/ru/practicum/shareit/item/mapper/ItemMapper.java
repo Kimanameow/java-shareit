@@ -18,4 +18,6 @@ public interface ItemMapper {
     ItemBookingCommentDto toItemBookingDto(Item item);
 
     ItemCommentDto toItemCommentDto(Item item);
+
+    ItemBookingCommentDto toItemBookingCommentDto(Item item);
 }

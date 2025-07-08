@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.State;
 import ru.practicum.shareit.booking.Status;
 import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.BookingRequest;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
@@ -29,12 +30,16 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepository userRepository;
 
     @Override
-    public BookingDto createBooking(Long userId, BookingDto bookingDto) {
-        validateTimeBooking(bookingDto);
-        Booking booking = bookingMapper.toBooking(bookingDto);
+    public BookingDto createBooking(Long userId, BookingRequest bookingRequest) {
+        Booking booking = new Booking();
+        booking.setStart(bookingRequest.getStart());
+        booking.setEnd(bookingRequest.getEnd());
+        booking.setItem(itemRepository.findById(bookingRequest.getItemId())
+                .orElseThrow(()-> new NotFoundException("Can't find this item.")));
         booking.setBooker(userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Can't find this user")));
         booking.setStatus(Status.WAITING);
+        validateBooking(booking);
         bookingRepository.save(booking);
         return bookingMapper.toBookingDto(booking);
     }
@@ -94,9 +99,12 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 
-    private void validateTimeBooking(BookingDto booking) {
-        if (booking.getStart().isBefore(booking.getEnd())) {
-            throw new ValidateException("Start time can't be after end time");
+    private void validateBooking(Booking booking) {
+        if (booking.getStart().isAfter(booking.getEnd()) || booking.getStart().isEqual(booking.getEnd())) {
+            throw new ValidateException("Can't add booking with that time");
+        }
+        if(booking.getItem().getAvailable().equals(false)){
+            throw new ValidateException("Unavailable item");
         }
     }
 

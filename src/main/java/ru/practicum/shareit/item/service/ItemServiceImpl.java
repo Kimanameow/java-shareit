@@ -6,12 +6,10 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidateException;
-import ru.practicum.shareit.item.dto.CommentDto;
-import ru.practicum.shareit.item.dto.ItemBookingCommentDto;
-import ru.practicum.shareit.item.dto.ItemCommentDto;
-import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -46,13 +44,26 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemCommentDto getItemById(Long itemId) {
+    public ItemBookingCommentDto getItemById(Long itemId) {
+        ItemBookingCommentDto itemBookingCommentDto = new ItemBookingCommentDto();
         Item item = itemRepository.findItemWithComments(itemId);
 
         if (item == null) {
             throw new NotFoundException("Item not found");
         }
-        return itemMapper.toItemCommentDto(item);
+
+        List<Booking> bookingsForItem = bookingRepository.findAllByItemId(itemId);
+
+        itemBookingCommentDto.setLastBooking(bookingsForItem.stream()
+                .filter(booking -> booking.getEnd().isBefore(LocalDateTime.now()))
+                .max(Comparator.comparing(Booking::getEnd))
+                .orElse(null));
+
+        itemBookingCommentDto.setNextBooking(bookingsForItem.stream()
+                .filter(booking -> booking.getStart().isAfter(LocalDateTime.now()))
+                .min(Comparator.comparing(Booking::getStart))
+                .orElse(null));
+        return itemBookingCommentDto;
     }
 
     @Override
@@ -81,7 +92,7 @@ public class ItemServiceImpl implements ItemService {
                 itemRepository.save(itemFromDataBase);
             }
             return itemMapper.toItemDto(itemFromDataBase);
-        } else throw new ValidateException("You can't change this item");
+        } else throw new NotFoundException("You can't change this item");
     }
 
     @Override
@@ -90,7 +101,7 @@ public class ItemServiceImpl implements ItemService {
 
         List<Item> itemsForUserWithComm = itemRepository.findItemsForUserWithComm(userId);
         if (itemsForUserWithComm.isEmpty()) {
-            throw new NotFoundException("Can't find your items");
+            return new ArrayList<>();
         }
 
         List<Long> itemsIds = new ArrayList<>();
@@ -126,22 +137,30 @@ public class ItemServiceImpl implements ItemService {
             return new ArrayList<>();
         }
 
-        List<Item> foundedItems = itemRepository.findAllByDescriptionContaining(description);
+        List<Item> foundedItems = itemRepository.findAllByDescriptionContainingIgnoreCase(description);
         if (foundedItems.isEmpty()) {
-            throw new NotFoundException("Items not found");
+            return new ArrayList<>();
         }
         return foundedItems.stream().map(itemMapper::toItemDto).toList();
     }
 
     @Override
-    public CommentDto addComment(Long itemId, CommentDto commentDto) {
-        User user = commentDto.getAuthor();
+    public CommentResponseDto addComment(Long itemId, CommentDto commentDto, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Can't find this user"));
 
-        if (itemRepository.findById(itemId).isPresent() && user != null) {
-            List<Booking> bookingsForUser = bookingRepository.findAllByBookerId(user.getId());
-            bookingsForUser.stream().filter(x -> x.getItem().equals(commentDto.getItem())).findFirst()
-                    .orElseThrow(() -> new ValidateException("Can't find your booking for this item"));
-            return commentMapper.toCommentDto(commentRepository.save(commentMapper.toComment(commentDto)));
-        } else throw new NotFoundException("Can't find this item");
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Cant find this item"));
+
+        List<Booking> bookingsForUser = bookingRepository.findAllByBookerId(userId);
+        bookingsForUser.stream().filter(x -> x.getItem().equals(item)).findFirst()
+                .orElseThrow(() -> new ValidateException("Can't find your booking for this item"));
+
+        Comment comment = new Comment();
+        comment.setItem(item);
+        comment.setUserAuthor(user);
+        comment.setText(commentDto.getText());
+
+        return commentMapper.toCommentResponseDto(commentRepository.save(comment));
     }
 }

@@ -1,15 +1,16 @@
 package ru.practicum.shareit.item.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 import ru.practicum.shareit.user.User;
 
 @Entity
+@Data
 @Table(name = "comments")
 public class Comment {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
-    @NotBlank(message = "Comment can't be empty")
     String text;
     @ManyToOne
     @JoinColumn(name = "user_id")
