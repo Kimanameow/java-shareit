@@ -4,18 +4,22 @@ import jakarta.persistence.*;
 import lombok.Data;
 import ru.practicum.shareit.user.User;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Data
 @Table(name = "comments")
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
-    String text;
+    private long id;
+    private String text;
     @ManyToOne
     @JoinColumn(name = "user_id")
-    User userAuthor;
+    private User userAuthor;
     @ManyToOne
     @JoinColumn(name = "item_id")
-    Item item;
+    private Item item;
+    @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP")
+    private LocalDateTime created;
 }
