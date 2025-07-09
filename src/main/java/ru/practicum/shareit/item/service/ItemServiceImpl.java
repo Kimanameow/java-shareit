@@ -2,6 +2,7 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.Status;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -137,8 +138,12 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException("Cant find this item"));
 
         List<Booking> bookingsForUser = bookingRepository.findAllByBookerId(userId);
-        Booking booking = bookingsForUser.stream().filter(x -> x.getItem().equals(item)).findFirst()
+        bookingsForUser.stream().filter(x -> x.getItem().equals(item)).findFirst()
                 .orElseThrow(() -> new ValidateException("Can't find your booking for this item"));
+
+        if (bookingsForUser.stream().noneMatch(b -> b.getStatus() == Status.APPROVED && b.getEnd().isBefore(LocalDateTime.now()))) {
+            throw new ValidateException("The user has not used the item");
+        }
 
         Comment comment = new Comment();
         comment.setItem(item);
