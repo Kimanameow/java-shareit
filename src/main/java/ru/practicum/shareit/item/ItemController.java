@@ -28,12 +28,12 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemBookingCommentDto getItemById(@PathVariable long itemId) {
+    public ItemFullDto getItemById(@PathVariable long itemId) {
         return itemService.getItemById(itemId);
     }
 
     @GetMapping
-    public List<ItemBookingCommentDto> getItemsByOwner(@RequestHeader("X-Sharer-User-Id") long userId) {
+    public List<ItemFullDto> getItemsByOwner(@RequestHeader("X-Sharer-User-Id") long userId) {
         return itemService.getItemsByOwner(userId);
     }
 

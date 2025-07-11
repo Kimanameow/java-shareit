@@ -9,10 +9,12 @@ import ru.practicum.shareit.booking.dto.BookingRequest;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.exception.BookingTimeException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidateException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
@@ -31,13 +33,13 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingDto createBooking(Long userId, BookingRequest bookingRequest) {
-        Booking booking = new Booking();
-        booking.setStart(bookingRequest.getStart());
-        booking.setEnd(bookingRequest.getEnd());
-        booking.setItem(itemRepository.findById(bookingRequest.getItemId())
-                .orElseThrow(() -> new NotFoundException("Can't find this item.")));
-        booking.setBooker(userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Can't find this user")));
+        Item item = itemRepository.findById(bookingRequest.getItemId())
+                .orElseThrow(() -> new NotFoundException("Can't find this item."));
+        User booker = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Can't find this user"));
+
+        Booking booking = bookingMapper.toBooking(bookingRequest, item, booker);
+        validateTimeBooking(booking);
         booking.setStatus(Status.WAITING);
         validateBooking(booking);
         bookingRepository.save(booking);
@@ -48,6 +50,10 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto validBooking(Long userId, Long bookingId, boolean approved) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Can't find this booking."));
+
+        if (booking.getStatus().equals(Status.CANCELED)) {
+            throw new ValidateException("The booking is canceled");
+        }
 
         if (booking.getItem().getOwner().getId().equals(userId)) {
             booking.setStatus((approved) ? Status.APPROVED : Status.REJECTED);
@@ -84,8 +90,8 @@ public class BookingServiceImpl implements BookingService {
         }
 
         List<Long> itemsIds = new ArrayList<>();
-        for (Item i : usersItems) {
-            itemsIds.add(i.getId());
+        for (Item item : usersItems) {
+            itemsIds.add(item.getId());
         }
 
         List<Booking> bookingsForUserItems = bookingRepository.findAllByItemIdIn(itemsIds);
@@ -99,7 +105,8 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private void validateBooking(Booking booking) {
-        if (booking.getStart().isAfter(booking.getEnd()) || booking.getStart().isEqual(booking.getEnd())) {
+        if (booking.getStart().isAfter(booking.getEnd()) || booking.getStart().isEqual(booking.getEnd())
+                || booking.getStart().isBefore(LocalDateTime.now())) {
             throw new ValidateException("Can't add booking with that time");
         }
         if (booking.getItem().getAvailable().equals(false)) {
@@ -137,6 +144,19 @@ public class BookingServiceImpl implements BookingService {
                         .map(bookingMapper::toBookingDto).toList();
             }
             default -> throw new ValidateException("Unexpected state");
+        }
+    }
+
+    private void validateTimeBooking(Booking booking) {
+        List<Booking> allBookingsForItem = bookingRepository.findAllByItemId(booking.getItem().getId());
+        boolean hasConflict = allBookingsForItem.stream()
+                .filter(b -> b.getStatus().equals(Status.APPROVED))
+                .anyMatch(bookings ->
+                        booking.getStart().isBefore(bookings.getEnd()) &&
+                                booking.getEnd().isAfter(bookings.getStart())
+                );
+        if (hasConflict) {
+            throw new BookingTimeException("This booking conflicts with an approved booking.");
         }
     }
 }

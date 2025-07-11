@@ -6,7 +6,7 @@ import ru.practicum.shareit.booking.model.Booking;
 import java.util.List;
 
 @Data
-public class ItemBookingCommentDto {
+public class ItemFullDto {
     private Long id;
     private String name;
     private String description;
