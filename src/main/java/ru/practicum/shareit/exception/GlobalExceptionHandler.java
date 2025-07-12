@@ -34,4 +34,13 @@ public class GlobalExceptionHandler {
                 .message(e.getMessage())
                 .build();
     }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse bookingTimeException(BookingTimeException e) {
+        return ErrorResponse.builder()
+                .code(409)
+                .message(e.getMessage())
+                .build();
+    }
 }
